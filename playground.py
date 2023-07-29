@@ -1,3 +1,4 @@
+from pprint import pprint
 from enum import Enum
 import typing
 import queue
@@ -69,10 +70,9 @@ class PlayGround:
     """
 
     def __init__(self, width=10) -> None:
-        self._grid = []
         self._width = width
-        self._current_play_row = 0
         self._row  = ['-'] * width
+        self._grid = [self._row]
     
     def initialize_row(self):
         """Reinitialize the current play row."""
@@ -101,105 +101,67 @@ class PlayGround:
             piece (Piece): The piece to place.
             xy_position (int): The xy position of the piece.
         """
-        # bottom pieces first 
-        reversed_pieces = reversed(piece.space) 
-        # total y space occupied by the piece needs to checked for 
-        # availability in the playground before placing any piece
-        # total_piece_height = len(piece.space)
-
-        # if total_piece_height > len(self._grid):
-        #     # the total piece height is greater than the playground
-        #     # height. This means the piece would increase the playground
-        #     # by including more rows.
-        #     pass
-
         row = 0
 
+        # GET POTENTIAL STARTING ROW
         # finding row for the column( at ) where piece placement can commence 
         # in the playground
-        while row <= self._current_play_row:
+        while row < len(self._grid):
             is_space_empty, reason = self.position_emptiness_check_and_cause(row=row, col=at)
-            if is_space_empty is True:
-                break
+            if not is_space_empty and reason == PositionCheckCause.ROW_OUT_OF_BOUNDS:
+                self.initialize_row()
+                self._grid.append(self._row)
+                row += 1
             else:
-                if reason == PositionCheckCause.ROW_OUT_OF_BOUNDS:
-                    self._grid.append(self._row) # add current row
-                    self.initialize_row() # initialize new row
-                    self._grid.append(self._row) # add new row
-            row += 1
-        
-        
-        # having found the row where piece placement is to commence
-        # retrieve the vector place each scalar appropriately
+                # CHECK PIECE HEIGHT AND MAKE SURE SPACE ABOVE START ROW CAN HOLD PIECE DATA
+                total_piece_height = len(piece.space) - 1
+                if total_piece_height > 1:
+                    height_counter = 1
+                    while height_counter <= total_piece_height:
+                        row_above_current_row = row + height_counter
+                        is_space_empty, reason = self.position_emptiness_check_and_cause(row=row_above_current_row, col=at)
+                        if not is_space_empty and reason == PositionCheckCause.CHECK:
+                            row += 1
+                        height_counter += 1
+                break
+
+        # bottom pieces first 
+        reversed_pieces = reversed(piece.space)
 
         # Everything is just a vector at the end of the day
         for piece_vector in reversed_pieces:
-            current_play_row = self._grid[row]
             next_col = 0
 
+            # if the vector element cannot all contain single row,
+            # add new row and increment the row to commence placement
             for item in piece_vector:
                 if item == 1:
-                    if self.is_unit_empty(unit_index=at + next_col, play_row=current_play_row):
-                        current_play_row[at + next_col] = 'o'
-                    else:
+                    if not self.is_unit_empty(unit_index=at + next_col, play_row=self._grid[row]):
+                        if row == len(self._grid) - 1:
+                            self.initialize_row()
+                            self._grid.append(self._row)
                         row += 1
-                        self._current_play_row += 1
-                        self.initialize_row()
-                        self._grid.append(self._row)                        
-                        current_play_row = self._row
-                        current_play_row[at + next_col] = 'o'
                 next_col += 1
-                
-                
-            # piece_vector == [ 0, 1, 1 ]
-            # board == [
-            #             [ -, -, -, -, o, o, -, -, -, -, - ]
-            #             [ -, -, -, -, -, -, -, -, -, -, - ]
-            #          ]
+            
+            # having found the row a piece could commence, if the piece
+            # containment would take more than a row, then the piece needs
+            # row higher up needs to be empty as well. Imagine 
+            # l0   -> this would have a good placement 
+            # l1   -> this would have a good placement
+            # i4   -> this would have a good start placement but the row higher up would've been occupied by l1
+            '''
+                    o   o   o   o            
+                o   o   o   o   # tyring to place 14 here would be fine but right above it, there already is a placement
+            '''
+            
+            next_col = 0
+            current_play_row = self._grid[row]
 
-            # Everything is just a scaler
-            # self.position_emptiness_check_and_cause(current_row, position)
+            for item in piece_vector:
+                if item == 1: 
+                    current_play_row[at + next_col] = 'o'
+                next_col += 1
 
-
-       
-        # JUST NOTE:: the initial location could be empty where other
-        # locations could be occupied.
-        
-        # if self._current_play_row > 0:
-        #     current_row = self._current_play_row
-        #     while True:
-
-
-                
-                
-        #         for piece_value in piece_vector:
-        #             xy = xy_position + piece_value
-        #             if piece_value == 1:
-        #                 pass
-
-
-        #         is_empty, reason = self.position_emptiness_check_and_cause(current_row, xy_position)
-        #         if is_empty:
-        #             break
-
-
-        # if self.position_emptiness_check_and_cause(xy_position):
-        #     reversed_pieces = reversed(piece.space)
-        #     for data in reversed_pieces:
-        #         row_position = 0  # this is for a grid system
-        #         col_position = 0
-        #         for piece_value in data:
-        #             xy = xy_position + col_position
-        #             if piece_value == 1:
-        #                 if self.is_unit_empty(xy):
-        #                     self._row[xy] = 'o'
-        #             col_position += 1
-        # else:
-            # self._grid.append(self._row)
-            # self._current_play_row += 1
-            # self.initialize_row()
-            # self._grid.append(self._row)
-            # self.place_piece(piece, xy_position)
 
     def is_unit_empty(self, unit_index:int, play_row:[]=None) -> bool:
         """Check if the given unit is empty.
@@ -211,7 +173,6 @@ class PlayGround:
             bool: True if the unit is empty.
         """
         if unit_index >= self._width:
-            print(f'Unit {unit_index} is out of bounds. Cannot check if empty')
             return False
         else:
             if play_row: return play_row[unit_index] == '-'
@@ -234,7 +195,7 @@ class PlayGround:
 
     def output_current_play_ground(self):
         """Output the current play ground."""
-        print(self._grid)
+        pprint(list(reversed(self._grid)))
 
 
 if __name__ == '__main__':
@@ -244,14 +205,18 @@ if __name__ == '__main__':
         [
             [1],
             [1],
-            [1],
-            [1]
+            [1, 1]
         ]
     )
     play_ground.place_piece(l_piece, 0)
-    play_ground.place_piece(l_piece, 0)
-    play_ground.place_piece(l_piece, 5)  # for case as this, the system needs to check the very first row to confirm it's fully taken
+    play_ground.place_piece(l_piece, 1)
+    play_ground.place_piece(l_piece, 5)  
+    play_ground.place_piece(l_piece, 5)
     play_ground.place_piece(i_piece, 4)
+    play_ground.place_piece(l_piece, 0)
+    play_ground.place_piece(l_piece, 0)
+    play_ground.place_piece(l_piece, 0)
+    play_ground.place_piece(l_piece, 6)
     play_ground.output_current_play_ground()
 
     

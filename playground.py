@@ -102,29 +102,6 @@ class PlayGround:
             xy_position (int): The xy position of the piece.
         """
         row = 0
-
-        # GET POTENTIAL STARTING ROW
-        # finding row for the column( at ) where piece placement can commence 
-        # in the playground
-        while row < len(self._grid):
-            is_space_empty, reason = self.position_emptiness_check_and_cause(row=row, col=at)
-            if not is_space_empty and reason == PositionCheckCause.ROW_OUT_OF_BOUNDS:
-                self.initialize_row()
-                self._grid.append(self._row)
-                row += 1
-            else:
-                # CHECK PIECE HEIGHT AND MAKE SURE SPACE ABOVE START ROW CAN HOLD PIECE DATA
-                total_piece_height = len(piece.space) - 1
-                if total_piece_height > 1:
-                    height_counter = 1
-                    while height_counter <= total_piece_height:
-                        row_above_current_row = row + height_counter
-                        is_space_empty, reason = self.position_emptiness_check_and_cause(row=row_above_current_row, col=at)
-                        if not is_space_empty and reason == PositionCheckCause.CHECK:
-                            row += 1
-                        height_counter += 1
-                break
-
         # bottom pieces first 
         reversed_pieces = reversed(piece.space)
 
@@ -136,31 +113,53 @@ class PlayGround:
             # add new row and increment the row to commence placement
             for item in piece_vector:
                 if item == 1:
-                    if not self.is_unit_empty(unit_index=at + next_col, play_row=self._grid[row]):
+                    check_row = self._grid[row]
+                    is_unit_space_empty = self.is_unit_empty(unit_index=at + next_col, play_row=check_row)
+                    if is_unit_space_empty is False:                            
                         if row == len(self._grid) - 1:
                             self.initialize_row()
                             self._grid.append(self._row)
-                        row += 1
+                        row +=  1
+                    else:
+                        total_piece_height = len(piece.space) - 1
+                        if total_piece_height > 1:
+                            height_counter = 1
+                            while height_counter <= total_piece_height:
+                                row_above_current_row = row + height_counter
+                                is_space_empty, reason = self.position_emptiness_check_and_cause(
+                                    row=row_above_current_row, col=at
+                                )
+                                if not is_space_empty:
+                                    if reason == PositionCheckCause.CHECK:
+                                        row += 1
+                                    else:
+                                        self.initialize_row()
+                                        self._grid.append(self._row)
+                                height_counter += 1
+                    
                 next_col += 1
-            
-            # having found the row a piece could commence, if the piece
-            # containment would take more than a row, then the piece needs
-            # row higher up needs to be empty as well. Imagine 
-            # l0   -> this would have a good placement 
-            # l1   -> this would have a good placement
-            # i4   -> this would have a good start placement but the row higher up would've been occupied by l1
-            '''
-                    o   o   o   o            
-                o   o   o   o   # tyring to place 14 here would be fine but right above it, there already is a placement
-            '''
             
             next_col = 0
             current_play_row = self._grid[row]
+            flag = False
+
+            while flag != True:
+                flag = self.is_unit_empty(unit_index=at + next_col, play_row=current_play_row)
+                if flag is False:                            
+                    if row == len(self._grid) - 1:
+                        self.initialize_row()
+                        self._grid.append(self._row)
+                    row +=  1
+                    current_play_row = self._grid[row]
 
             for item in piece_vector:
+
+                print(f'r{row} c{ at + next_col}', end=' ')
                 if item == 1: 
                     current_play_row[at + next_col] = 'o'
                 next_col += 1
+            print()
+            
 
 
     def is_unit_empty(self, unit_index:int, play_row:[]=None) -> bool:
@@ -189,7 +188,6 @@ class PlayGround:
             bool: True if the grid position is empty.
         """
         if row >= len(self._grid):
-            print(f'Grid position {row} is out of bounds. Cannot check if empty')
             return False, PositionCheckCause.ROW_OUT_OF_BOUNDS
         return self._grid[row][col] == '-', PositionCheckCause.CHECK
 
@@ -208,16 +206,29 @@ if __name__ == '__main__':
             [1, 1]
         ]
     )
+    q_piece = Piece(
+        [
+            [1, 1],
+            [1, 1]
+        ]
+    )
+    
+    
     play_ground.place_piece(l_piece, 0)
     play_ground.place_piece(l_piece, 1)
-    play_ground.place_piece(l_piece, 5)  
+    play_ground.place_piece(l_piece, 5)
     play_ground.place_piece(l_piece, 5)
     play_ground.place_piece(i_piece, 4)
     play_ground.place_piece(l_piece, 0)
     play_ground.place_piece(l_piece, 0)
     play_ground.place_piece(l_piece, 0)
     play_ground.place_piece(l_piece, 6)
+    play_ground.place_piece(q_piece, 8)
+    play_ground.place_piece(q_piece, 6)
+    play_ground.place_piece(q_piece, 6)
+    print()
     play_ground.output_current_play_ground()
+    print("   {0: <4} {1: <4} {2: <4} {3: <4} {4: <4} {5: <4} {6: <4} {7: <4} {8: <4} {9: <4}".format( *[str(i) for i in range(10)] ), end='')
 
     
     

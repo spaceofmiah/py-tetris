@@ -9,5 +9,5 @@ fi
 input=$(cat)
 
 
-echo $(python main.py "$input")
+echo $(python tetris.py "$input")
 

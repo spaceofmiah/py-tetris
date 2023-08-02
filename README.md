@@ -60,3 +60,21 @@ Open your bash shell and navigate to project folder and run
 ```
 
 Above command would run the application with the given input and redirect the program result to a file named `output.txt`
+
+
+## TESTING THE APPLICATION
+
+Testing on windows run
+
+```python
+python tests_on_window.py
+```
+
+
+Testing on windows run
+
+```python
+python tests_on_linux.py
+```
+
+

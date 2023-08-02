@@ -1,13 +1,12 @@
 #!/usr/bin/bash
 
-if [ -t 0 ]; then
-    echo "Please provide a filename as input using < symbol."
-    exit 1
-fi
+# if [ -t 0 ]; then
+#     echo "Please provide a filename as input using < symbol."
+#     exit 1
+# fi
 
-# Read the content of the file specified as input
-input=$(cat)
+# # Read the content of the file specified as input
+# input=$(cat)
 
-
-echo $(python tetris.py "$input")
+echo $(python tetris.py $1)
 

@@ -77,7 +77,6 @@ class Tetris():
             has_overlap, next_width, next_height, next_indexes = self._check_overlap(
                 block, self.initial_grid, base_row, position)
             if has_overlap:
-                # print('found', base_row)
                 break
             elif (base_row == 1):
                 width, height, indexes = (
@@ -166,7 +165,6 @@ class Tetris():
 
         if (should_increase_height):
             height = row_coef + row
-        # print(has_overlap, width, height, indexes)
         return (has_overlap, width, height, indexes)
 
 
@@ -182,9 +180,7 @@ if __name__ == "__main__":
 
     tetris = Tetris()
     for block in blocks:
-        block = block.replace("\n", "")
         block, position = block_map[block[0]], int(block[-1]) + 1
-
         tetris.put_block(block=block, position=position)
-        
+    
     print(tetris.height)

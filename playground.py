@@ -1,6 +1,8 @@
-# L, Q, Z, S, T, I, J
-# from pprint import pprint
+import sys
 
+
+
+# L, Q, Z, S, T, I, J
 BLOCK_L = [
     [1, 0],
     [1, 0],
@@ -38,23 +40,20 @@ BLOCK_J = [
 ]
 
 initial_grid = []
+block_map = {
+    'Q': BLOCK_Q,       
+    'J': BLOCK_J,       
+    'L': BLOCK_L,       
+    'Z': BLOCK_Z,       
+    'S': BLOCK_S,       
+    'I': BLOCK_I,
+    'T': BLOCK_T
+}
 
-
-def insert_in_position(base_block, block, row, column):
-    pass
-
-
-# initial_grid = [
-#     [0 for i in range(10)],
-#     [1 for i in range(10)]]
-initial_grid = [
-    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    # [1 for i in range(10)]
-]
 
 
 class Tetris():
-    def __init__(self, block=[[0 for i in range(10)]]):
+    def __init__(self, block=[[0 for _ in range(10)]]):
         self.initial_grid = block
         self.input_rows = []
         self.input_columns = []
@@ -76,7 +75,7 @@ class Tetris():
             has_overlap, next_width, next_height, next_indexes = self._check_overlap(
                 block, self.initial_grid, base_row, position)
             if has_overlap:
-                print('found', base_row)
+                # print('found', base_row)
                 break
             elif (base_row == 1):
                 width, height, indexes = (
@@ -165,28 +164,26 @@ class Tetris():
 
         if (should_increase_height):
             height = row_coef + row
-        print(has_overlap, width, height, indexes)
+        # print(has_overlap, width, height, indexes)
         return (has_overlap, width, height, indexes)
 
 
-tetris = Tetris()
-# tetris.put_block(BLOCK_T, 1)
-# tetris.put_block(BLOCK_Z, 3)
-# tetris.put_block(BLOCK_I, 4)
-# tetris.put_block(BLOCK_I, 1)
-# tetris.put_block(BLOCK_I, 5)
-# tetris.put_block(BLOCK_T, 7)
-# tetris.put_block(BLOCK_Q, 6)
-# tetris.put_block(BLOCK_Q, 7)
-# tetris.put_block(BLOCK_T, 8)
-tetris.put_block(BLOCK_Q, 1)
-tetris.put_block(BLOCK_I, 3)
-tetris.put_block(BLOCK_I, 7)
-tetris.put_block(BLOCK_I, 1)
-tetris.put_block(BLOCK_I, 7)
-tetris.put_block(BLOCK_I, 7)
-tetris.put_block(BLOCK_Q, 3)
-tetris.put_block(BLOCK_Q, 5)
-tetris.print()
-print(tetris.height)
-# put_block(initial_grid, BLOCK_J, 2)
+if __name__ == "__main__":
+    blocks = []
+
+    input = open(sys.argv[1],"r")
+    output = open(sys.argv[2],"w")
+
+    for line in input.readlines():
+        blocks.extend(line.split(","))
+
+
+    tetris = Tetris()
+    for block in blocks:
+        block = block.replace("\n", "")
+        block, position = block_map[block[0]], int(block[-1]) + 1
+
+        tetris.put_block(block=block, position=position)
+        
+    output.write(str(tetris.height))
+    output.close()

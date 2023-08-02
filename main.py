@@ -1,3 +1,4 @@
+from itertools import chain
 import sys
 
 
@@ -169,14 +170,7 @@ class Tetris():
 
 
 if __name__ == "__main__":
-    blocks = []
-
-    input = open(sys.argv[1],"r")
-    output = open(sys.argv[2],"w")
-
-    for line in input.readlines():
-        blocks.extend(line.split(","))
-
+    blocks = list(chain.from_iterable([i.split(',') for i in sys.argv[1].split('\n')]))
 
     tetris = Tetris()
     for block in blocks:
@@ -185,5 +179,4 @@ if __name__ == "__main__":
 
         tetris.put_block(block=block, position=position)
         
-    output.write(str(tetris.height))
-    output.close()
+    print(tetris.height)

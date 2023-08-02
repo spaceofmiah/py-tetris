@@ -1,235 +1,192 @@
-from pprint import pprint
-from enum import Enum
-import typing
-import queue
+# L, Q, Z, S, T, I, J
+# from pprint import pprint
+
+BLOCK_L = [
+    [1, 0],
+    [1, 0],
+    [1, 1]
+]
+
+BLOCK_Q = [
+    [1, 1],
+    [1, 1]
+]
+
+BLOCK_Z = [
+    [1, 1, 0],
+    [0, 1, 1]
+]
+
+BLOCK_S = [
+    [0, 1, 1],
+    [1, 1, 0]
+]
+
+BLOCK_T = [
+    [1, 1, 1],
+    [0, 1, 0]
+]
+
+BLOCK_I = [
+    [1, 1, 1, 1]
+]
+
+BLOCK_J = [
+    [0, 1],
+    [0, 1],
+    [1, 1]
+]
+
+initial_grid = []
 
 
-class Piece:
-    """Represents a piece in the game.
+def insert_in_position(base_block, block, row, column):
+    pass
 
-    Attributes:
-        space (matrix): The unit spaces that 
-        makes up a piece. 
-        
-        A piece element with a value of  1 indicates 
-        that the unit space is occupied.
-        
-        A piece element with a value of 0 indicates that
-        the unit space is not occupied.
 
-        sample
-            a piece representing Q is a matrix
-                [
-                    [1, 1],
-                    [1, 1]
-                ]
-            
-            a piece representing i is a vector
-                [
-                    [1, 1, 1, 1]
-                ]
+# initial_grid = [
+#     [0 for i in range(10)],
+#     [1 for i in range(10)]]
+initial_grid = [
+    [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    # [1 for i in range(10)]
+]
 
-            a piece representing L is a vector
-                [
-                    [1],
-                    [1],
-                    [1],
-                    [1, 1,]
-                ]
 
-    """
+class Tetris():
+    def __init__(self, block=[[0 for i in range(10)]]):
+        self.initial_grid = block
+        self.input_rows = []
+        self.input_columns = []
+        pass
 
-    def __init__(self, space:list) -> None:
-        self._space = space
-    
     @property
-    def space(self) -> list:
-        """Get the unit spaces that make up the piece."""
-        return self._space
-    
-    def __str__(self) -> str:
-        return f'Piece: {self._space}'
-    
-    def __repr__(self) -> str:
-        return f'Piece: {self._space}'
+    def height(self):
+        return len(self.initial_grid)
 
+    def put_block(self, block, position):
+        base_row = len(self.initial_grid) + 1
+        grid_height = len(self.initial_grid)
+        grid_width = len(self.initial_grid[0])
+        pad_row = 0
+        pad_column = 0
+        width, height, indexes = (10, 1, [])
 
-class PositionCheckCause(Enum):
-    """Represents the cause of a position check result."""
-    ROW_OUT_OF_BOUNDS   = 'row_out_of_range'
-    CHECK               = 'position_check'
-
-
-class PlayGround:
-    """Represents the playground for the game.
-
-    Attributes:
-        width (int): The width of the playground.
-        This represents the number of units that can
-        occupy a row in a grid. defaults to 10.
-    """
-
-    def __init__(self, width=10) -> None:
-        self._width = width
-        self._row  = ['-'] * width
-        self._grid = [self._row]
-    
-    def initialize_row(self):
-        """Reinitialize the current play row."""
-        self._row = ['-'] * self._width
-    
-    def occupy_between(self, start:int, end:int) -> None:
-        """Occupy the playground between the given indices.
-
-        Args:
-            start (int): The starting index.
-            end (int): The ending index.
-        """
-        for index in range(start, end):
-            if self.is_unit_empty(index):
-                self._row[index] = 'o'
+        while True:
+            has_overlap, next_width, next_height, next_indexes = self._check_overlap(
+                block, self.initial_grid, base_row, position)
+            if has_overlap:
+                print('found', base_row)
+                break
+            elif (base_row == 1):
+                width, height, indexes = (
+                    next_width, next_height, next_indexes)
+                break
             else:
-                print(f'Unit {index} is occupied. Cannot occupy')
-                self._grid.append(self._row)
-                self.initialize_row()
-                self._row[index] = 'o'
-    
-    def place_piece(self, piece:Piece, at:int) -> None:
-        """Place the given piece on the playground.
+                width, height, indexes = (
+                    next_width, next_height, next_indexes)
+                base_row -= 1
 
-        Args:
-            piece (Piece): The piece to place.
-            xy_position (int): The xy position of the piece.
-        """
-        row = 0
-        # bottom pieces first 
-        reversed_pieces = reversed(piece.space)
+        if (width > grid_width):
+            pad_row = width - grid_width
+            # TODO: IF the requirement say so for horizontally overflowing block
+            pass
 
-        # Everything is just a vector at the end of the day
-        for piece_vector in reversed_pieces:
-            next_col = 0
+        if (height > grid_height):
+            pad_column = height - grid_height
+            padding = [[0 for _ in range(grid_width)]
+                       for _ in range(pad_column)]
+            self.initial_grid = padding + self.initial_grid
+        for (row, column) in indexes:
+            self.initial_grid[row + pad_column][column + pad_row] = 1
+        
+        self.remove_occupied_row()
+        return self.initial_grid
 
-            # if the vector element cannot all contain single row,
-            # add new row and increment the row to commence placement
-            for item in piece_vector:
-                if item == 1:
-                    check_row = self._grid[row]
-                    is_unit_space_empty = self.is_unit_empty(unit_index=at + next_col, play_row=check_row)
-                    if is_unit_space_empty is False:                            
-                        if row == len(self._grid) - 1:
-                            self.initialize_row()
-                            self._grid.append(self._row)
-                        row +=  1
-                    else:
-                        total_piece_height = len(piece.space) - 1
-                        if total_piece_height > 1:
-                            height_counter = 1
-                            while height_counter <= total_piece_height:
-                                row_above_current_row = row + height_counter
-                                is_space_empty, reason = self.position_emptiness_check_and_cause(
-                                    row=row_above_current_row, col=at
-                                )
-                                if not is_space_empty:
-                                    if reason == PositionCheckCause.CHECK:
-                                        row += 1
-                                    else:
-                                        self.initialize_row()
-                                        self._grid.append(self._row)
-                                height_counter += 1
-                    
-                next_col += 1
-            
-            next_col = 0
-            current_play_row = self._grid[row]
-            flag = False
+    def remove_occupied_row(self):
+        """Removes fully occupied row"""
+        for row in range(len(self.initial_grid) - 1):
+            if (0 not in self.initial_grid[row]):
+                self.initial_grid.pop(row)
+                if len(self.initial_grid) == 0:
+                    self.initial_grid.append([0 for _ in range(10)])
 
-            while flag != True:
-                flag = self.is_unit_empty(unit_index=at + next_col, play_row=current_play_row)
-                if flag is False:                            
-                    if row == len(self._grid) - 1:
-                        self.initialize_row()
-                        self._grid.append(self._row)
-                    row +=  1
-                    current_play_row = self._grid[row]
+    def print(self):
+        from pprint import pprint
+        pprint(self.initial_grid)
 
-            for item in piece_vector:
+    def _check_overlap(self,
+                       incoming_block, base_block, row_coef=1,
+                       column_coef=1):
+        indexes = []
+        # TODO: add check coeficient cannot be less than 1
+        row_coef -= 1
+        column_coef -= 1
 
-                print(f'r{row} c{ at + next_col}', end=' ')
-                if item == 1: 
-                    current_play_row[at + next_col] = 'o'
-                next_col += 1
-            print()
-            
+        height = len(base_block)
+        width = len(base_block[0])
 
+        row, column = (len(incoming_block), len(incoming_block[0]))
+        base_row, base_column = (len(base_block) - row_coef, column_coef)
 
-    def is_unit_empty(self, unit_index:int, play_row:[]=None) -> bool:
-        """Check if the given unit is empty.
+        has_overlap = False
+        should_increase_height = False
+        should_increase_width = False
 
-        Args:
-            unit_index (int): The index of the unit position in a grid.
+        for i in reversed(range(row)):
+            for j in range(column):
+                cell = incoming_block[i][j]
+                base_i = base_row - (row - i)
+                base_j = base_column + j
 
-        Returns:
-            bool: True if the unit is empty.
-        """
-        if unit_index >= self._width:
-            return False
-        else:
-            if play_row: return play_row[unit_index] == '-'
-            return self._row[unit_index] == '-'
-    
-    def position_emptiness_check_and_cause(self, row:int, col:int) -> typing.Tuple[bool, str]:
-        """Check if the given grid position is empty.
+                if (base_i < 0):
+                    should_increase_height = True
+                    if (cell == 1):
+                        indexes.append((base_i, base_j))
+                    continue
 
-        Args:
-            x (int): The x position of the grid.
-            y (int): The y position of the grid.
+                if (base_j < 0):
+                    should_increase_width = True
+                    continue
 
-        Returns:
-            bool: True if the grid position is empty.
-        """
-        if row >= len(self._grid):
-            return False, PositionCheckCause.ROW_OUT_OF_BOUNDS
-        return self._grid[row][col] == '-', PositionCheckCause.CHECK
+                solid_cell = base_block[base_i][base_j]
+                if (cell == 1 and solid_cell == 1):
+                    has_overlap = True
+                    break
+                elif (cell == 1):
+                    indexes.append((base_i, base_j))
+                else:
+                    continue
+            if has_overlap:
+                break
 
-    def output_current_play_ground(self):
-        """Output the current play ground."""
-        pprint(list(reversed(self._grid)))
+        if (should_increase_width):
+            width = column_coef + column
+
+        if (should_increase_height):
+            height = row_coef + row
+        print(has_overlap, width, height, indexes)
+        return (has_overlap, width, height, indexes)
 
 
-if __name__ == '__main__':
-    play_ground = PlayGround()
-    l_piece = Piece([[1, 1, 1, 1]])
-    i_piece = Piece(
-        [
-            [1],
-            [1],
-            [1, 1]
-        ]
-    )
-    q_piece = Piece(
-        [
-            [1, 1],
-            [1, 1]
-        ]
-    )
-    
-    
-    play_ground.place_piece(l_piece, 0)
-    play_ground.place_piece(l_piece, 1)
-    play_ground.place_piece(l_piece, 5)
-    play_ground.place_piece(l_piece, 5)
-    play_ground.place_piece(i_piece, 4)
-    play_ground.place_piece(l_piece, 0)
-    play_ground.place_piece(l_piece, 0)
-    play_ground.place_piece(l_piece, 0)
-    play_ground.place_piece(l_piece, 6)
-    play_ground.place_piece(q_piece, 8)
-    play_ground.place_piece(q_piece, 6)
-    play_ground.place_piece(q_piece, 6)
-    print()
-    play_ground.output_current_play_ground()
-    print("   {0: <4} {1: <4} {2: <4} {3: <4} {4: <4} {5: <4} {6: <4} {7: <4} {8: <4} {9: <4}".format( *[str(i) for i in range(10)] ), end='')
-
-    
-    
-
+tetris = Tetris()
+# tetris.put_block(BLOCK_T, 1)
+# tetris.put_block(BLOCK_Z, 3)
+# tetris.put_block(BLOCK_I, 4)
+# tetris.put_block(BLOCK_I, 1)
+# tetris.put_block(BLOCK_I, 5)
+# tetris.put_block(BLOCK_T, 7)
+# tetris.put_block(BLOCK_Q, 6)
+# tetris.put_block(BLOCK_Q, 7)
+# tetris.put_block(BLOCK_T, 8)
+tetris.put_block(BLOCK_Q, 1)
+tetris.put_block(BLOCK_I, 3)
+tetris.put_block(BLOCK_I, 7)
+tetris.put_block(BLOCK_I, 1)
+tetris.put_block(BLOCK_I, 7)
+tetris.put_block(BLOCK_I, 7)
+tetris.put_block(BLOCK_Q, 3)
+tetris.put_block(BLOCK_Q, 5)
+tetris.print()
+print(tetris.height)
+# put_block(initial_grid, BLOCK_J, 2)

@@ -5,5 +5,5 @@ Tetris game
 Run program with
 
 ```python
-python .\playground.py .\input.txt .\output.txt
+python .\tetris.py .\input.txt .\output.txt
 ```

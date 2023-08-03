@@ -8,5 +8,6 @@ fi
 # Read the content of the file specified as input
 input=$(cat)
 
-echo $(python tetris.py $1)
+
+echo $(python tetris.py "$input")
 

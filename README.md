@@ -64,17 +64,7 @@ Above command would run the application with the given input and redirect the pr
 
 ## TESTING THE APPLICATION
 
-Testing on windows run
-
 ```python
-python tests_on_window.py
+python sample_test.py
 ```
-
-
-Testing on windows run
-
-```python
-python tests_on_linux.py
-```
-
 

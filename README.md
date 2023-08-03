@@ -18,7 +18,25 @@ open up git bash and navigate to project folder and run
 .\tetris.sh < input.txt > output.txt
 ```
 
-**Building `tetris.py` to `tetris.exe`**
+**On Linux**
+
+Open your bash shell and navigate to project folder and run
+
+```bash
+.\tetris.sh < input.txt > output.txt
+```
+
+Above command would run the application with the given input and redirect the program result to a file named `output.txt`
+
+
+## TESTING THE APPLICATION
+
+```python
+python sample_test.py
+```
+
+
+## Building `tetris.py` to `tetris.exe`
 
 > Pre-requisite
 >
@@ -49,22 +67,5 @@ And that should automatically run the program with the given input file. Above c
 
 ```bash
 ./dist/tetris/tetris.exe input.txt > output.txt
-```
-
-**On Linux**
-
-Open your bash shell and navigate to project folder and run
-
-```bash
-.\tetris.sh < input.txt > output.txt
-```
-
-Above command would run the application with the given input and redirect the program result to a file named `output.txt`
-
-
-## TESTING THE APPLICATION
-
-```python
-python sample_test.py
 ```
 
